@@ -39,22 +39,6 @@ p {
     color: black;
 }
 
-.selected-0 {
-    background-color: white;
-}
-
-.selected-1 {
-    background-color: #eeeeee;
-}
-
-.selected-2 {
-    background-color: #999999;
-}
-
-.selected-3 {
-    background-color: #555555;
-}
-
-.selected-4 {
-    background-color: black;
+.snake {
+    background-color: brown;
 }
