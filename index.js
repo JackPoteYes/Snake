@@ -8,6 +8,7 @@ const LOOP_PERIOD = 100;
 let direction = "right";
 let count = 0;
 let snake = [INITIAL_HEAD_INDEX];
+let nbFireColoredCells = 0;
 
 var lastBodyPartPreviousLocation = null;
 var MAIN_LOOP = null;
@@ -66,18 +67,34 @@ function failAnimation() {
   snake.map(snakePart => emptyCell(getCell(...snakePart)));
   // Erase the food
   emptyCell(getCell(...FOOD_LOCATION));
-  // Color the collision coords with food color
-  fillFoodCell(getCell(...head));
 
-  const iterateSuite = [-1, 0, 1];
+  // Explosion 1
+  const iterateSuite = [0, -1, 1];
   let count = 0;
   iterateSuite.map(x =>
     iterateSuite.map(y =>
       setTimeout(() => {
-        fillFoodCell(getCell(head[0] + x, head[1] + y));
-      }, ++count * 50),
+        fillFireCell(getCell(head[0] + x, head[1] + y));
+      }, ++count * 10),
     ),
   );
+
+  // Explosion 2 (Extra layer)
+  setTimeout(() => {
+    const suite = [-2, -1, 0, 1, 2];
+    let count2 = 0;
+    suite.map(x =>
+      suite.map(y =>
+        setTimeout(() => {
+          try {
+            fillFireCell(getCell(head[0] + x, head[1] + y));
+          } catch (e) {
+            // pass
+          }
+        }, ++count2 * 5),
+      ),
+    );
+  }, 50);
 }
 
 function stopLoop() {
@@ -153,6 +170,10 @@ function toggleCell(cellElement) {
 
 function fillFoodCell(cellElement) {
   cellElement.className = "cell-content food";
+}
+
+function fillFireCell(cellElement) {
+  cellElement.className = "cell-content fire";
 }
 
 function fillCell(cellElement) {
