@@ -7,10 +7,12 @@ const LOOP_PERIOD = 100;
 
 let direction = "right";
 let count = 0;
-let snake = [INITIAL_HEAD_INDEX, [0, 2], [0, 1], [0, 0]];
+let snake = [INITIAL_HEAD_INDEX];
 
+var lastBodyPartPreviousLocation = null;
 var MAIN_LOOP = null;
 var RUNNING = false;
+var FOOD_LOCATION = getRandomLocation();
 
 initPage();
 
@@ -21,30 +23,34 @@ function loop() {
     switch (direction) {
       case "right":
         newHeadIndex =
-          headIndex[1] % 12 === 11
-            ? [headIndex[0], headIndex[1] - 11]
+          headIndex[1] % GRID_LENGTH === GRID_LENGTH - 1
+            ? [headIndex[0], headIndex[1] - (GRID_LENGTH - 1)]
             : [headIndex[0], headIndex[1] + 1];
         break;
       case "left":
         newHeadIndex =
-          headIndex[1] % 12 === 0
-            ? [headIndex[0], headIndex[1] + 11]
+          headIndex[1] % GRID_LENGTH === 0
+            ? [headIndex[0], headIndex[1] + (GRID_LENGTH - 1)]
             : [headIndex[0], headIndex[1] - 1];
         break;
       case "down":
         newHeadIndex =
-          headIndex[0] % 12 === 11
-            ? [headIndex[0] - 11, headIndex[1]]
+          headIndex[0] % GRID_LENGTH === GRID_LENGTH - 1
+            ? [headIndex[0] - (GRID_LENGTH - 1), headIndex[1]]
             : [headIndex[0] + 1, headIndex[1]];
         break;
       case "up":
         newHeadIndex =
-          headIndex[0] % 12 === 0
-            ? [headIndex[0] + 11, headIndex[1]]
+          headIndex[0] % GRID_LENGTH === 0
+            ? [headIndex[0] + (GRID_LENGTH - 1), headIndex[1]]
             : [headIndex[0] - 1, headIndex[1]];
         break;
     }
     moveSnake(newHeadIndex);
+    if (snakeIsOnFood()) {
+      growSnake();
+      dropFood();
+    }
   }, LOOP_PERIOD);
   RUNNING = true;
 }
@@ -52,6 +58,19 @@ function loop() {
 function stopLoop() {
   clearInterval(MAIN_LOOP);
   RUNNING = false;
+}
+
+function snakeIsOnFood() {
+  return snake[0][0] == FOOD_LOCATION[0] && snake[0][1] == FOOD_LOCATION[1];
+}
+
+function growSnake() {
+  snake.push([...lastBodyPartPreviousLocation]);
+}
+
+function dropFood() {
+  FOOD_LOCATION = getRandomLocation();
+  fillFoodCell(getCell(...FOOD_LOCATION));
 }
 
 document.addEventListener("keydown", event => {
@@ -78,6 +97,8 @@ function moveSnake(newIndex) {
   // Empty last bit
   emptyCell(getCell(...snake[snake.length - 1]));
 
+  lastBodyPartPreviousLocation = snake[snake.length - 1];
+
   // Update snake's indexes
   for (let i = snake.length - 1; i > 0; i--) {
     snake[i] = snake[i - 1];
@@ -93,6 +114,10 @@ function toggleCell(cellElement) {
     cellElement.className.length > "cell-content".length
       ? "cell-content"
       : "cell-content snake";
+}
+
+function fillFoodCell(cellElement) {
+  cellElement.className = "cell-content food";
 }
 
 function fillCell(cellElement) {
@@ -127,4 +152,20 @@ function initPage() {
   }
   container.appendChild(table);
   snake.map(cellIndex => fillCell(getCell(...cellIndex)));
+  fillFoodCell(getCell(...FOOD_LOCATION));
+}
+
+function getRandomLocation() {
+  do {
+    var [x, y] = [
+      (Math.random() * (GRID_LENGTH - 1)).toFixed(),
+      (Math.random() * (GRID_LENGTH - 1)).toFixed(),
+    ];
+    console.log(x, y);
+  } while (
+    snake.filter(
+      snakePartIndex => snakePartIndex[0] === x && snakePartIndex[1] === y,
+    ).length > 0
+  );
+  return [x, y];
 }
