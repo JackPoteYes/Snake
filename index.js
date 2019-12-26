@@ -2,12 +2,12 @@ const CELLS = [];
 const GRID_LENGTH = 12;
 const ROOT_ID = "root";
 const SHADES_NB = 5;
-const INITIAL_HEAD_INDEX = [0, 1];
+const INITIAL_HEAD_INDEX = [0, 3];
 const LOOP_PERIOD = 100;
 
 let direction = "right";
 let count = 0;
-let snake = [INITIAL_HEAD_INDEX, [0, 0]];
+let snake = [INITIAL_HEAD_INDEX, [0, 2], [0, 1], [0, 0]];
 
 var MAIN_LOOP = null;
 var RUNNING = false;
@@ -79,8 +79,8 @@ function moveSnake(newIndex) {
   emptyCell(getCell(...snake[snake.length - 1]));
 
   // Update snake's indexes
-  for (let i = 0; i < snake.length - 1; i++) {
-    snake[i + 1] = snake[i];
+  for (let i = snake.length - 1; i > 0; i--) {
+    snake[i] = snake[i - 1];
   }
   snake[0] = newIndex;
 
