@@ -5,6 +5,7 @@ const SHADES_NB = 5;
 const INITIAL_HEAD_INDEX = [0, 3];
 var LOOP_PERIOD = 250;
 var ACCELERATION = 20;
+var SCORE = 0;
 
 let direction = "right";
 let count = 0;
@@ -57,9 +58,16 @@ function loop() {
       growSnake();
       dropFood();
       accelerate();
+      incrementScore();
     }
   }, LOOP_PERIOD);
   RUNNING = true;
+}
+
+function incrementScore() {
+  const scoreElem = document.getElementById("score");
+  console.log(scoreElem);
+  scoreElem.innerText = (++SCORE).toString();
 }
 
 function accelerate() {
