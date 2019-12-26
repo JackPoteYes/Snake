@@ -8,6 +8,20 @@ body {
   font-family: "Audiowide", cursive;
 }
 
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+    supported by Chrome, Opera and Firefox */
+}
+
+.dontdisplay {
+    display: none !important;
+}
+
 #main-container {
   display: flex;
   flex-direction: column;
@@ -17,6 +31,36 @@ body {
 #root {
   display: flex;
   justify-content: center;
+}
+
+#try-again-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    width: 200px;
+    height: 100px;
+    border: 1px solid #922bd6;
+    /* border-radius: 25px; */
+    background: radial-gradient(#2a0642, black);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 40px;
+
+    -webkit-box-shadow: 0px 0px 49px 5px rgba(146,43,214,1);
+    -moz-box-shadow: 0px 0px 49px 5px rgba(146,43,214,1);
+    box-shadow: 0px 0px 49px 5px rgba(146,43,214,1);
+}
+
+#try-again-container h5 {
+    color: rgb(252, 243, 221);
+    padding: 10px;
+    letter-spacing: 2px;
+    font-size: 25px;
 }
 
 td {

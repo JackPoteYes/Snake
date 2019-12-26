@@ -1,58 +1,61 @@
-const CELLS = [];
-const GRID_LENGTH = 12;
-const ROOT_ID = "root";
-const SHADES_NB = 5;
-const INITIAL_HEAD_INDEX = [0, 3];
-var LOOP_PERIOD = 250;
-var ACCELERATION = 20;
-var SCORE = 0;
+// Config
+const INITIAL_CONFIG = {
+  CELLS: [],
+  GRID_LENGTH: 12,
+  ROOT_CONTAINER: document.getElementById("root"),
+  SNAKE: [[0, 3]],
+  LOOP_PERIOD: 250,
+  ACCELERATION: 20,
+  SCORE: 0,
+  STATE_FAIL: false,
+  DIRECTION: "right",
+  MAIN_LOOP: null,
+  LAST_BODY_PART_PREVIOUS_LOCATION: null,
+  RUNNING: false,
+  FOOD_LOCATION: null,
+};
 
-let direction = "right";
-let count = 0;
-let snake = [INITIAL_HEAD_INDEX];
-let nbFireColoredCells = 0;
-
-var lastBodyPartPreviousLocation = null;
-var MAIN_LOOP = null;
-var RUNNING = false;
-var FOOD_LOCATION = getRandomLocation();
+// Globals
+var GLOBALS = null;
 
 initPage();
 
 function loop() {
-  MAIN_LOOP = setInterval(() => {
-    const headIndex = snake[0];
+  GLOBALS.MAIN_LOOP = setInterval(() => {
+    const headIndex = GLOBALS.SNAKE[0];
     let newHeadIndex = [null, null];
-    switch (direction) {
+    switch (GLOBALS.DIRECTION) {
       case "right":
         newHeadIndex =
-          headIndex[1] % GRID_LENGTH === GRID_LENGTH - 1
-            ? [headIndex[0], headIndex[1] - (GRID_LENGTH - 1)]
+          headIndex[1] % GLOBALS.GRID_LENGTH === GLOBALS.GRID_LENGTH - 1
+            ? [headIndex[0], headIndex[1] - (GLOBALS.GRID_LENGTH - 1)]
             : [headIndex[0], headIndex[1] + 1];
         break;
       case "left":
         newHeadIndex =
-          headIndex[1] % GRID_LENGTH === 0
-            ? [headIndex[0], headIndex[1] + (GRID_LENGTH - 1)]
+          headIndex[1] % GLOBALS.GRID_LENGTH === 0
+            ? [headIndex[0], headIndex[1] + (GLOBALS.GRID_LENGTH - 1)]
             : [headIndex[0], headIndex[1] - 1];
         break;
       case "down":
         newHeadIndex =
-          headIndex[0] % GRID_LENGTH === GRID_LENGTH - 1
-            ? [headIndex[0] - (GRID_LENGTH - 1), headIndex[1]]
+          headIndex[0] % GLOBALS.GRID_LENGTH === GLOBALS.GRID_LENGTH - 1
+            ? [headIndex[0] - (GLOBALS.GRID_LENGTH - 1), headIndex[1]]
             : [headIndex[0] + 1, headIndex[1]];
         break;
       case "up":
         newHeadIndex =
-          headIndex[0] % GRID_LENGTH === 0
-            ? [headIndex[0] + (GRID_LENGTH - 1), headIndex[1]]
+          headIndex[0] % GLOBALS.GRID_LENGTH === 0
+            ? [headIndex[0] + (GLOBALS.GRID_LENGTH - 1), headIndex[1]]
             : [headIndex[0] - 1, headIndex[1]];
         break;
     }
     moveSnake(newHeadIndex);
     if (snakeBitesItself()) {
+      GLOBALS.STATE_FAIL = true;
       stopLoop();
       failAnimation();
+      setTimeout(displayTryAgain(), 1000);
     }
     if (snakeIsOnFood()) {
       growSnake();
@@ -60,30 +63,56 @@ function loop() {
       accelerate();
       incrementScore();
     }
-  }, LOOP_PERIOD);
-  RUNNING = true;
+  }, GLOBALS.LOOP_PERIOD);
+  GLOBALS.RUNNING = true;
+}
+
+function tryAgain() {
+  removeTryAgain();
+  GLOBALS.STATE_FAIL = false;
+  const rootElem = document.getElementById("root");
+  // Remove all its children
+  while (rootElem.firstChild) {
+    rootElem.removeChild(rootElem.firstChild);
+  }
+  rootElem.innerHtml = "";
+  initPage();
+}
+
+function displayTryAgain() {
+  const tryAgainConteainer = document.getElementById("try-again-container");
+  tryAgainConteainer.className = "";
+}
+
+function removeTryAgain() {
+  const tryAgainConteainer = document.getElementById("try-again-container");
+  tryAgainConteainer.className = "dontdisplay";
 }
 
 function incrementScore() {
+  setScore(++GLOBALS.SCORE);
+}
+
+function setScore(nb) {
   const scoreElem = document.getElementById("score");
-  console.log(scoreElem);
-  scoreElem.innerText = (++SCORE).toString();
+  scoreElem.innerText = nb.toString();
 }
 
 function accelerate() {
-  LOOP_PERIOD = LOOP_PERIOD - ACCELERATION;
+  GLOBALS.LOOP_PERIOD = GLOBALS.LOOP_PERIOD - GLOBALS.ACCELERATION;
   stopLoop();
   loop();
-  ACCELERATION = ACCELERATION > 4 ? ACCELERATION - 2 : ACCELERATION;
+  GLOBALS.ACCELERATION =
+    GLOBALS.ACCELERATION > 4 ? GLOBALS.ACCELERATION - 2 : GLOBALS.ACCELERATION;
 }
 
 function failAnimation() {
   // Get the head coords
-  const head = [...snake[0]];
+  const head = [...GLOBALS.SNAKE[0]];
   // Erase the snake
-  snake.map(snakePart => emptyCell(getCell(...snakePart)));
+  GLOBALS.SNAKE.map(snakePart => emptyCell(getCell(...snakePart)));
   // Erase the food
-  emptyCell(getCell(...FOOD_LOCATION));
+  emptyCell(getCell(...GLOBALS.FOOD_LOCATION));
 
   // Explosion 1
   const iterateSuite = [0, -1, 1];
@@ -115,67 +144,71 @@ function failAnimation() {
 }
 
 function stopLoop() {
-  clearInterval(MAIN_LOOP);
-  RUNNING = false;
+  clearInterval(GLOBALS.MAIN_LOOP);
+  GLOBALS.RUNNING = false;
 }
 
 function snakeIsOnFood() {
-  return snake[0][0] == FOOD_LOCATION[0] && snake[0][1] == FOOD_LOCATION[1];
+  return (
+    GLOBALS.SNAKE[0][0] == GLOBALS.FOOD_LOCATION[0] &&
+    GLOBALS.SNAKE[0][1] == GLOBALS.FOOD_LOCATION[1]
+  );
 }
 
 function growSnake() {
-  snake.push([...lastBodyPartPreviousLocation]);
+  GLOBALS.SNAKE.push([...GLOBALS.LAST_BODY_PART_PREVIOUS_LOCATION]);
 }
 
 function dropFood() {
-  FOOD_LOCATION = getRandomLocation();
-  fillFoodCell(getCell(...FOOD_LOCATION));
+  GLOBALS.FOOD_LOCATION = getRandomLocation();
+  fillFoodCell(getCell(...GLOBALS.FOOD_LOCATION));
 }
 
 function snakeBitesItself() {
   return (
-    snake
-      .slice(1)
-      .filter(
-        snakePart => snakePart[0] == snake[0][0] && snakePart[1] == snake[0][1],
-      ).length > 0
+    GLOBALS.SNAKE.slice(1).filter(
+      snakePart =>
+        snakePart[0] == GLOBALS.SNAKE[0][0] &&
+        snakePart[1] == GLOBALS.SNAKE[0][1],
+    ).length > 0
   );
 }
 
 document.addEventListener("keydown", event => {
   switch (event.keyCode) {
     case 40:
-      direction = "down";
+      GLOBALS.DIRECTION = "down";
       break;
     case 37:
-      direction = "left";
+      GLOBALS.DIRECTION = "left";
       break;
     case 38:
-      direction = "up";
+      GLOBALS.DIRECTION = "up";
       break;
     case 39:
-      direction = "right";
+      GLOBALS.DIRECTION = "right";
       break;
     case 32:
-      RUNNING ? stopLoop() : loop();
+      GLOBALS.STATE_FAIL ? tryAgain() : GLOBALS.RUNNING ? stopLoop() : loop();
       break;
   }
 });
 
 function moveSnake(newIndex) {
   // Empty last bit
-  emptyCell(getCell(...snake[snake.length - 1]));
+  emptyCell(getCell(...GLOBALS.SNAKE[GLOBALS.SNAKE.length - 1]));
 
-  lastBodyPartPreviousLocation = snake[snake.length - 1];
+  GLOBALS.LAST_BODY_PART_PREVIOUS_LOCATION =
+    GLOBALS.SNAKE[GLOBALS.SNAKE.length - 1];
 
   // Update snake's indexes
-  for (let i = snake.length - 1; i > 0; i--) {
-    snake[i] = snake[i - 1];
+  for (let i = GLOBALS.SNAKE.length - 1; i > 0; i--) {
+    GLOBALS.SNAKE[i] = GLOBALS.SNAKE[i - 1];
   }
-  snake[0] = newIndex;
+  GLOBALS.SNAKE[0] = newIndex;
 
   // Fill first bit (head)
-  fillCell(getCell(...snake[0]));
+  fillCell(getCell(...GLOBALS.SNAKE[0]));
 }
 
 function toggleCell(cellElement) {
@@ -202,16 +235,18 @@ function emptyCell(cellElement) {
 }
 
 function getCell(x, y) {
-  return CELLS[x][y];
+  return GLOBALS.CELLS[x][y];
 }
 
 function initPage() {
-  const container = document.getElementById(ROOT_ID);
+  GLOBALS = { ...INITIAL_CONFIG };
+  setScore(GLOBALS.SCORE);
+  GLOBALS.FOOD_LOCATION = getRandomLocation();
   const table = document.createElement("table");
-  for (let row = 0; row < GRID_LENGTH; row++) {
+  for (let row = 0; row < GLOBALS.GRID_LENGTH; row++) {
     const tr = document.createElement("tr");
-    CELLS.push([]);
-    for (let col = 0; col < GRID_LENGTH; col++) {
+    GLOBALS.CELLS.push([]);
+    for (let col = 0; col < GLOBALS.GRID_LENGTH; col++) {
       const cell = document.createElement("td");
       cell.y = row;
       cell.x = col;
@@ -219,23 +254,26 @@ function initPage() {
       cellContent.className = "cell-content";
       cell.appendChild(cellContent);
       tr.appendChild(cell);
-      CELLS[row].push(cell);
+      GLOBALS.CELLS[row].push(cell);
     }
     table.appendChild(tr);
   }
-  container.appendChild(table);
-  snake.map(cellIndex => fillCell(getCell(...cellIndex)));
-  fillFoodCell(getCell(...FOOD_LOCATION));
+  GLOBALS.ROOT_CONTAINER.appendChild(table);
+  GLOBALS.SNAKE.map(cellIndex => {
+    console.log([...cellIndex]);
+    fillCell(getCell(...cellIndex));
+  });
+  fillFoodCell(getCell(...GLOBALS.FOOD_LOCATION));
 }
 
 function getRandomLocation() {
   do {
     var [x, y] = [
-      (Math.random() * (GRID_LENGTH - 1)).toFixed(),
-      (Math.random() * (GRID_LENGTH - 1)).toFixed(),
+      (Math.random() * (GLOBALS.GRID_LENGTH - 1)).toFixed(),
+      (Math.random() * (GLOBALS.GRID_LENGTH - 1)).toFixed(),
     ];
   } while (
-    snake.filter(
+    GLOBALS.SNAKE.filter(
       snakePartIndex => snakePartIndex[0] == x && snakePartIndex[1] == y,
     ).length > 0
   );
