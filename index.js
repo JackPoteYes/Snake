@@ -47,12 +47,37 @@ function loop() {
         break;
     }
     moveSnake(newHeadIndex);
+    if (snakeBitesItself()) {
+      stopLoop();
+      failAnimation();
+    }
     if (snakeIsOnFood()) {
       growSnake();
       dropFood();
     }
   }, LOOP_PERIOD);
   RUNNING = true;
+}
+
+function failAnimation() {
+  // Get the head coords
+  const head = [...snake[0]];
+  // Erase the snake
+  snake.map(snakePart => emptyCell(getCell(...snakePart)));
+  // Erase the food
+  emptyCell(getCell(...FOOD_LOCATION));
+  // Color the collision coords with food color
+  fillFoodCell(getCell(...head));
+
+  const iterateSuite = [-1, 0, 1];
+  let count = 0;
+  iterateSuite.map(x =>
+    iterateSuite.map(y =>
+      setTimeout(() => {
+        fillFoodCell(getCell(head[0] + x, head[1] + y));
+      }, ++count * 50),
+    ),
+  );
 }
 
 function stopLoop() {
@@ -71,6 +96,16 @@ function growSnake() {
 function dropFood() {
   FOOD_LOCATION = getRandomLocation();
   fillFoodCell(getCell(...FOOD_LOCATION));
+}
+
+function snakeBitesItself() {
+  return (
+    snake
+      .slice(1)
+      .filter(
+        snakePart => snakePart[0] == snake[0][0] && snakePart[1] == snake[0][1],
+      ).length > 0
+  );
 }
 
 document.addEventListener("keydown", event => {
@@ -161,10 +196,9 @@ function getRandomLocation() {
       (Math.random() * (GRID_LENGTH - 1)).toFixed(),
       (Math.random() * (GRID_LENGTH - 1)).toFixed(),
     ];
-    console.log(x, y);
   } while (
     snake.filter(
-      snakePartIndex => snakePartIndex[0] === x && snakePartIndex[1] === y,
+      snakePartIndex => snakePartIndex[0] == x && snakePartIndex[1] == y,
     ).length > 0
   );
   return [x, y];
