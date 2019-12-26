@@ -3,7 +3,8 @@ const GRID_LENGTH = 12;
 const ROOT_ID = "root";
 const SHADES_NB = 5;
 const INITIAL_HEAD_INDEX = [0, 3];
-const LOOP_PERIOD = 100;
+var LOOP_PERIOD = 250;
+var ACCELERATION = 20;
 
 let direction = "right";
 let count = 0;
@@ -55,9 +56,17 @@ function loop() {
     if (snakeIsOnFood()) {
       growSnake();
       dropFood();
+      accelerate();
     }
   }, LOOP_PERIOD);
   RUNNING = true;
+}
+
+function accelerate() {
+  LOOP_PERIOD = LOOP_PERIOD - ACCELERATION;
+  stopLoop();
+  loop();
+  ACCELERATION = ACCELERATION > 4 ? ACCELERATION - 2 : ACCELERATION;
 }
 
 function failAnimation() {
